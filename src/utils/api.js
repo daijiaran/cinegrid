@@ -617,3 +617,95 @@ export const mockGenerateStoryboard = async (params) => {
     return `https://placehold.co/${totalW}x${totalH}/1e293b/a5b4fc?text=${text}&font=roboto`;
 };
 
+/**
+ * [新增] Sora 视频生成 API
+ * 对应文档：/v1/video/sora-video
+ * * @param {Object} config - API 配置
+ * @param {Object} params - 视频生成参数
+ * @param {string} params.prompt - 提示词
+ * @param {string} params.imageUrl - 参考图 (Base64 或 HTTP URL)
+ * @param {Function} addLog - 日志回调
+ * @returns {Promise<string>} 返回生成的视频 URL
+ */
+export const generateSoraVideo = async (config, params, addLog = console.log) => {
+    const { baseUrl, apiKey } = config;
+
+    if (!baseUrl || !apiKey) throw new Error("API Config Missing");
+
+    const cleanBaseUrl = baseUrl.replace(/\/+$/, '');
+    // 接口路径
+    const completionUrl = `${cleanBaseUrl}/v1/video/sora-video`;
+    // 轮询接口
+    const resultUrl = `${cleanBaseUrl}/v1/draw/result`;
+
+    // 1. 提交任务
+    // 参数构建
+    const payload = {
+        model: "sora-2",
+        prompt: params.prompt,
+        url: params.imageUrl, // 参考图
+        aspectRatio: "16:9", // 默认比例
+        duration: 5,         // 默认时长 (根据文档支持 5/10/15，这里取5秒演示)
+        webHook: "-1",       // 开启轮询模式
+        shutProgress: false
+    };
+
+    addLog("Sora Video: Submitting task...");
+
+    const submitResp = await fetch(completionUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}` // 认证
+        },
+        body: JSON.stringify(payload)
+    });
+
+    if (!submitResp.ok) {
+        const errText = await submitResp.text();
+        throw new Error(`Submit Failed: ${errText}`);
+    }
+
+    const submitJson = await submitResp.json();
+    const taskId = submitJson?.data?.id;
+
+    if (!taskId) throw new Error("No Task ID returned from Sora Video API");
+
+    addLog(`Sora Video Task ID: ${taskId}, Polling...`);
+
+    // 2. 轮询结果
+    const MAX_ATTEMPTS = 600; // 视频生成较慢，增加轮询次数
+    const DELAY_MS = 3000;
+
+    for (let i = 0; i < MAX_ATTEMPTS; i++) {
+        await new Promise(r => setTimeout(r, DELAY_MS));
+
+        const resultResp = await fetch(resultUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({ id: taskId })
+        });
+
+        if (!resultResp.ok) continue;
+
+        const resultJson = await resultResp.json();
+        const taskData = resultJson?.data;
+        const status = taskData?.status;
+
+        // 成功状态判断
+        if (status === 'succeeded') {
+            const videoUrl = taskData?.results?.[0]?.url;
+            if (!videoUrl) throw new Error("Success but no video URL");
+            return videoUrl;
+        } else if (status === 'failed') {
+            throw new Error(`Video Failed: ${taskData?.failure_reason}`);
+        } else {
+            if (i % 5 === 0) addLog(`Video Progress: ${taskData?.progress || 0}%`);
+        }
+    }
+
+    throw new Error("Video Generation Timeout");
+};
