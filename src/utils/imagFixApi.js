@@ -7,16 +7,16 @@
 
 // 1. 画质增强接口地址
     //本地调试
-const ENHANCE_API_URL = 'http://localhost:8081/api/enhance';
+// const ENHANCE_API_URL = 'http://localhost:8081/api/enhance';
     //生产部署
-// const ENHANCE_API_URL = '/api/enhance';
+const ENHANCE_API_URL = '/api/enhance';
 
 
 // 2. 通用超分接口地址 (对应后端 /api/super-resolution)
     //本地调试
-const SUPER_RES_API_URL = 'http://localhost:8081/api/super-resolution';
+// const SUPER_RES_API_URL = 'http://localhost:8081/api/super-resolution';
     //生产部署
-// const SUPER_RES_API_URL = '/api/super-resolution';
+const SUPER_RES_API_URL = '/api/super-resolution';
 
 // ===================== 接口方法 =====================
 

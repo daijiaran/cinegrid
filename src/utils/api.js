@@ -645,7 +645,7 @@ export const generateSoraVideo = async (config, params, addLog = console.log) =>
         prompt: params.prompt,
         url: params.imageUrl, // 参考图
         aspectRatio: "16:9", // 默认比例
-        duration: 5,         // 默认时长 (根据文档支持 5/10/15，这里取5秒演示)
+        duration: 15,         // 默认时长 (根据文档支持 5/10/15，这里取5秒演示)
         webHook: "-1",       // 开启轮询模式
         shutProgress: false
     };
