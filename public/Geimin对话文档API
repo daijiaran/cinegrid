@@ -1,5 +1,4 @@
-你希望我把这段HTML中包含的Chat API相关信息解析并整理成一份结构化、易读的API文档，我已经提取了所有核心信息并按规范的API文档格式进行了整理。
-
+这里使用的APIkey是：src/utils/api.js中的apikey
 # Chat API 文档
 ## 1. 接口概述
 该接口的参数与响应格式完全兼容 OpenAI Chat Completions API，仅需更换接口地址即可直接使用。
