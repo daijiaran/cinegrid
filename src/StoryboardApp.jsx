@@ -107,17 +107,10 @@ export default function App() {
     }, []);
 
     /**
-     * [新增] 切换至视频生成视图
-     * 校验：必须有清晰化后的图片作为素材
+     * [修改] 切换至视频生成视图
+     * 修改点：移除所有条件限制，直接切换
      */
     const handleSwitchToVideo = () => {
-        if (upscaledResults.length === 0) {
-            setErrorModal({
-                visible: true,
-                message: "输出区域为空。请先在故事板中生成图片，并进行“清晰化”处理，这些高质量图片将作为视频生成的参考素材。"
-            });
-            return;
-        }
         setCurrentView('video_generation');
         addLog("切换至视频生成工作流");
     };
@@ -306,72 +299,77 @@ export default function App() {
     const handleUpscale = async (customPrompt) => { /* 保持原有 handleUpscale 逻辑 */ };
 
     // ============================================================
-    // 6. 渲染逻辑
+    // 6. 渲染逻辑 [修改：使用 CSS 控制显隐，保持组件状态]
     // ============================================================
 
     return (
         <div className="flex h-screen w-full bg-[#09090b] text-zinc-300 font-sans overflow-hidden">
 
-            {currentView === 'storyboard' ? (
-                <>
-                    {/* 左侧控制面板 */}
-                    <LeftPanel
-                        config={config} onConfigChange={setConfig}
-                        genOptions={genOptions} onGenOptionsChange={setGenOptions}
-                        outputDirName={outputDirName} onSelectOutputFolder={handleSelectOutputFolder}
-                        prompt={prompt} onPromptChange={setPrompt}
-                        gridMode={gridMode} onGridModeChange={setGridMode}
-                        assets={assets} onFileUpload={(newAssets) => setAssets(p => [...p, ...newAssets])}
-                        onRemoveAsset={(id) => setAssets(p => p.filter(a => a.id !== id))}
-                        onAnalyzeAssets={() => {}} // 逻辑省略
-                        isAnalyzing={isAnalyzing}
-                        onGenerate={handleGenerate} isGenerating={isGenerating}
-                        showConfig={showConfig} onToggleConfig={() => setShowConfig(!showConfig)}
-                    />
+            {/* 故事板视图容器
+                使用 display: none 而不是条件渲染，以保持状态活跃
+            */}
+            <div className={`flex w-full h-full ${currentView === 'storyboard' ? '' : 'hidden'}`}>
+                {/* 左侧控制面板 */}
+                <LeftPanel
+                    config={config} onConfigChange={setConfig}
+                    genOptions={genOptions} onGenOptionsChange={setGenOptions}
+                    outputDirName={outputDirName} onSelectOutputFolder={handleSelectOutputFolder}
+                    prompt={prompt} onPromptChange={setPrompt}
+                    gridMode={gridMode} onGridModeChange={setGridMode}
+                    assets={assets} onFileUpload={(newAssets) => setAssets(p => [...p, ...newAssets])}
+                    onRemoveAsset={(id) => setAssets(p => p.filter(a => a.id !== id))}
+                    onAnalyzeAssets={() => {}} // 逻辑省略
+                    isAnalyzing={isAnalyzing}
+                    onGenerate={handleGenerate} isGenerating={isGenerating}
+                    showConfig={showConfig} onToggleConfig={() => setShowConfig(!showConfig)}
+                />
 
-                    {/* 中间显示面板 - 传入视图切换回调 */}
-                    <MiddlePanel
-                        config={config}
-                        genOptions={genOptions}
-                        outputDirName={outputDirName}
-                        logs={logs}
-                        gridMode={gridMode}
-                        generatedImage={generatedImage}
-                        slicedImages={slicedImages}
-                        analysisResult={analysisResult}
-                        isGenerating={isGenerating}
-                        onDownloadMaster={() => downloadFile(generatedImage, 'master.png')}
-                        onDownloadSlice={(url, idx) => downloadFile(url, `shot_${idx+1}.png`)}
-                        onDownloadAll={() => {}} // 逻辑省略
-                        processingQueue={processingQueue}
-                        setProcessingQueue={setProcessingQueue}
-                        upscaledResults={upscaledResults}
-                        isUpscaling={isUpscaling}
-                        upscaleModel={upscaleModel}
-                        setUpscaleModel={setUpscaleModel}
-                        onUpscale={handleUpscale}
-                        onAddUpscaledResult={handleAddUpscaledResult}
-                        onDownloadAllOutput={() => {}} // 逻辑省略
-                        onClearOutput={() => setUpscaledResults([])}
-                        onSwitchToVideo={handleSwitchToVideo} // [新增传递]
-                    />
+                {/* 中间显示面板 - 传入视图切换回调 */}
+                <MiddlePanel
+                    config={config}
+                    genOptions={genOptions}
+                    outputDirName={outputDirName}
+                    logs={logs}
+                    gridMode={gridMode}
+                    generatedImage={generatedImage}
+                    slicedImages={slicedImages}
+                    analysisResult={analysisResult}
+                    isGenerating={isGenerating}
+                    onDownloadMaster={() => downloadFile(generatedImage, 'master.png')}
+                    onDownloadSlice={(url, idx) => downloadFile(url, `shot_${idx+1}.png`)}
+                    onDownloadAll={() => {}} // 逻辑省略
+                    processingQueue={processingQueue}
+                    setProcessingQueue={setProcessingQueue}
+                    upscaledResults={upscaledResults}
+                    isUpscaling={isUpscaling}
+                    upscaleModel={upscaleModel}
+                    setUpscaleModel={setUpscaleModel}
+                    onUpscale={handleUpscale}
+                    onAddUpscaledResult={handleAddUpscaledResult}
+                    onDownloadAllOutput={() => {}} // 逻辑省略
+                    onClearOutput={() => setUpscaledResults([])}
+                    onSwitchToVideo={handleSwitchToVideo} // [修改] 调用无检查的切换函数
+                />
 
-                    {/* 右侧进程列表 */}
-                    <RightPanel
-                        tasks={tasks}
-                        currentTaskId={currentTaskId}
-                        onTaskSelect={handleTaskSelect}
-                        onDeleteTask={handleDeleteTask}
-                    />
-                </>
-            ) : (
-                // [新增渲染] 视频生成工作流
+                {/* 右侧进程列表 */}
+                <RightPanel
+                    tasks={tasks}
+                    currentTaskId={currentTaskId}
+                    onTaskSelect={handleTaskSelect}
+                    onDeleteTask={handleDeleteTask}
+                />
+            </div>
+
+            {/* 视频生成工作流视图容器
+                同样一直渲染，通过 CSS 隐藏
+            */}
+            <div className={`w-full h-full ${currentView === 'video_generation' ? '' : 'hidden'}`}>
                 <VideoGenerationPanel
                     config={config}
                     initialAssets={upscaledResults} // 传入已生成的清晰化图片
                     onBack={handleBackToStoryboard} // 返回故事板
                 />
-            )}
+            </div>
 
             {/* 错误提示模态框 */}
             {errorModal.visible && (
