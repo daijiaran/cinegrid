@@ -1,0 +1,112 @@
+你希望我把这段HTML中包含的Chat API相关信息解析并整理成一份结构化、易读的API文档，我已经提取了所有核心信息并按规范的API文档格式进行了整理。
+
+# Chat API 文档
+## 1. 接口概述
+该接口的参数与响应格式完全兼容 OpenAI Chat Completions API，仅需更换接口地址即可直接使用。
+
+## 2. 接口地址
+| 类型 | 地址 |
+|------|------|
+| 原OpenAI接口 | https://api.openai.com/v1/chat/completions |
+| 替换后接口 | https://api.grsai.com/v1/chat/completions |
+
+## 3. 参考文档
+OpenAI 官方 API 文档：https://platform.openai.com/docs/api-reference/chat/create?lang=curl
+
+## 4. 支持的模型
+```
+nano-banana-fast
+nano-banana
+gemini-3-pro
+gemini-2.5-pro
+gemini-2.5-flash
+gemini-2.5-flash-lite
+```
+
+## 5. 请求规范
+### 5.1 请求头（Headers）
+```json
+{
+  "Content-Type": "application/json",
+  "Authorization": "Bearer apikey"
+}
+```
+> 说明：`apikey` 需要替换为实际的接口密钥。
+
+### 5.2 请求参数（JSON）
+```json
+{
+  "model": "gpt-4o-mini",
+  "stream": true,
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a helpful assistant."
+    },
+    {
+      "role": "user",
+      "content": "Hello!"
+    }
+  ]
+}
+```
+
+### 5.3 核心参数说明
+| 参数名 | 类型 | 示例 | 必填 | 描述 |
+|--------|------|------|------|------|
+| model | string | "gpt-4o-mini" | 是 | 调用的模型名称（可使用文档中列出的支持模型） |
+| stream | boolean | true | 是 | 是否启用流式响应（true=流式，false=非流式） |
+| messages | array | [{"role": "user", "content": "你好"}] | 是 | 对话上下文信息，包含角色（role）和内容（content） |
+
+## 6. 响应格式
+### 6.1 非流式响应（stream=false）
+```json
+{
+  "id": "xxxx",
+  "object": "chat.completion",
+  "created": 1741569952,
+  "model": "gpt-4o-mini",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Hello! How can I assist you today?",
+        "refusal": null,
+        "annotations": []
+      },
+      "finish_reason": "stop"
+    }
+  ]
+}
+```
+
+### 6.2 流式响应（stream=true）
+```json
+{
+  "id": "xxxx",
+  "object": "chat.completion",
+  "created": 1741569952,
+  "model": "gpt-4o-mini",
+  "choices": [
+    {
+      "index": 0,
+      "delta": {
+        "role": "assistant",
+        "content": "Hello! How can I assist you today?",
+        "refusal": null,
+        "annotations": []
+      },
+      "finish_reason": "stop"
+    }
+  ]
+}
+```
+> 关键区别：流式响应中使用 `delta` 字段返回增量内容，非流式响应使用 `message` 字段返回完整内容。
+
+---
+
+### 总结
+1. 该接口完全兼容OpenAI Chat API格式，仅需将请求地址替换为 `https://api.grsai.com/v1/chat/completions` 即可使用。
+2. 核心必填参数为 `model`（模型名）、`stream`（是否流式）、`messages`（对话上下文）。
+3. 流式与非流式响应的核心区别是：流式用 `delta` 字段返回增量内容，非流式用 `message` 字段返回完整内容。
